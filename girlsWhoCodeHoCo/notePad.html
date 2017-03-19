@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<style>
+		*, *:before, *:after {
+		box-sizing: border-box;
+		}
+		
+		#instructNote{ 
+		/* style properties to override .note class for id = instructNote */
+		position: relative;
+		width:  22%;
+		height: 100%; //fit to 100% of content
+		padding: 1.5%;
+		}
+		
+	.note{
+		position: absolute;
+		width: 20%;
+		height: 100px;
+		background: #ffb;
+		border: 2px solid #999;
+	}
+	
+	/* background canvas - used by event listener */
+	#notePad{
+	position: absolute;
+	width: 100%;
+	height: 600px;
+	background: white;
+	border: 1px solid black;
+	}	
+
+	</style>
+	</head>
+
+
+<h1> Notepad </h1>
+<body>
+    <!-- background notePad to listen for click events -->
+    <div id = "notePad">.</div>
+</body>
+
+<script>
+// Pure JS - no library
+
+var notes = []; //created notes stored in array, not yet accessed in code
+var noteNum = 0; //used to count created notes & create unique ids
+
+
+/**** Drag Notes & Right Click to Delete  ****/
+// inspired by: https://jsfiddle.net/tovic/Xcb8d/
+
+var currNote = null; //selected note
+
+var initDrag = function(e){ 
+	// remove note on right click
+	if (e.which == 3) {
+  		if (confirm('Are you sure you want to delete this note?')) {
+       		 //removes note by finding parent and deleting child (this)
+        	this.parentNode.removeChild(this); 
+        } else {
+    				// Do nothing! 
+    		}
+    } else {
+    // saves selected note for dragging
+    	currNote = this;  
+    	currNote.style.cursor = 'move';
+    }
+ }
+
+function _drag(e) {
+    if (currNote !== null) {
+        currNote.style.left = (e.clientX - 50) + 'px';
+        currNote.style.top = (e.clientY - 50) + 'px';
+    }
+}
+
+function _drop() {
+    currNote.style.cursor = 'auto';
+    currNote = null;
+}
+
+document.onmousemove = _drag;
+document.onmouseup = _drop;
+
+/************ Create Instruction Note ****************/
+var instructNote = document.createElement("div");
+		instructNote.className = "note";
+		instructNote.id = "instructNote";
+		instructNote.innerHTML = "Click on Canvas to <br> Create New Note<br><br> Drag to Move <br><br> Right Click to Delete";
+		instructNote.style.left = "50px";
+		instructNote.style.top = "50px";
+    document.body.appendChild(instructNote);
+
+/******** Timer for instruction note *******************/
+// Remove instruction note after 20 seconds
+var startTime = null; //start time at null
+var instructTimer = function(timestamp){
+		var timeSec = timestamp /1000; //change millisecconds -> seconds
+    
+    // if start time is null (e.g. first run) - set current seconds to start time
+		if (!startTime) startTime = timeSec;
+    // calculate time passed
+    var progress = timeSec - startTime;
+    
+    // if less than 20 seconds has passed,
+    if (progress < 20){
+    	// re-call function to count progress
+    	window.requestAnimationFrame(instructTimer);
+    } else {
+        	// remove the div element with id = instructNote
+    document.getElementById("instructNote").remove();
+    }    
+};
+window.requestAnimationFrame(instructTimer);
+
+/*********** Event listener - Add Notes to NotePad on Click at Click Position ***/
+// 1.get element & save to var
+var notepadEl = document.getElementById("notePad");
+// 2.function of click action
+var onNotepadClick = function(e) {
+  var newNote = document.createElement("textarea");
+  newNote.className = "note";
+  newNote.id = "note" + noteNum;
+  document.body.appendChild(newNote);
+  newNote.style.top = e.clientY + "px";
+  newNote.style.left = e.clientX + "px";
+  newNote.onmousedown = initDrag; //sends element prop. to initDrag function
+  notes.push(newNote);
+  noteNum += 1;
+};
+// 3. add Event Listener to element & assign function to param
+notepadEl.addEventListener("click", onNotepadClick);
+</script> 
+
+</html>
